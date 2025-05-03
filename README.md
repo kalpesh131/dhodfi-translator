@@ -12,3 +12,10 @@ AI/ML based Language translator for languages(dialects) spoken in South Gujarat(
 - Cost: Some components(especially Speech to Text, Hosting) can incur cost. Goal is to use free tools or minimal cost tools to achieve the desired result. Depending on the success of the project, we can revisit.
 - Cache: Frequently spoken text can be cached on the backend considering time taken to do speech to text to speech again.
 - Community: Make it open to public. Build feedback loop. Crowdsourcing for input corpus and continous training the model.
+
+## Run
+- `python -m venv venv`
+- `source venv/bin/activate`
+- `pip install -r requirements.txt`
+- `uvicorn main:app --reload`
+- `curl -X POST http://127.0.0.1:8000/translate-audio -H "accept: audio/wav" -H "Content-Type: multipart/form-data" -F "file=@gujarati_name.wav"`
