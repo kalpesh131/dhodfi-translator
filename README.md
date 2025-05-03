@@ -3,7 +3,7 @@
 AI/ML based Language translator for languages(dialects) spoken in South Gujarat(India). Translation include audio-to-audio, text-to-audio, audio-to-text with current focus on audio-to-audio with future feature enhancements.
 
 ## High Level Architecture
-![Architecture](sg-lang.png)
+![Architecture](sg-lang-2.png)
 
 ## Considerations
 - Modularity: Keep the code as modular/abstract as possible. We may need to try out few different tools to achieve same functionality.
