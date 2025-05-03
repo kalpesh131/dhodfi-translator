@@ -12,17 +12,12 @@ import time
 from pydantic import BaseModel
 from transformers import MBartForConditionalGeneration, MBart50TokenizerFast
 
-logging.basicConfig(level=logging.DEBUG)
-
-import http.client as http_client
-http_client.HTTPConnection.debuglevel = 1
-
 app = FastAPI()
 
 model = MBartForConditionalGeneration.from_pretrained("mbart-dhodfi-model")
 tokenizer = MBart50TokenizerFast.from_pretrained("mbart-dhodfi-model")
 tokenizer.src_lang = "en_XX"
-forced_bos_token_id = tokenizer.lang_code_to_id["gu_IN"]
+forced_bos_token_id = tokenizer.lang_code_to_id["en_XX"]
 
 @app.post("/translate-audio")
 async def translate_audio(file: UploadFile = File(...)):
@@ -40,10 +35,9 @@ async def translate_audio(file: UploadFile = File(...)):
     file_size_bytes = os.path.getsize(video_path)
     print(f"File size: {file_size_bytes} bytes")
     # Run everything
-    #video_id = "8e07d665-9e1c-4e96-bb5e-2752bf69b406" #upload_video(video_path)
     video_id = upload_video(video_path)
-    #video_id = "e49c7a4f-717c-429b-a8d1-05fdc8c033a8"
 
+    sentence = ""
     if video_id:
         task_id = start_transcription(video_id)
         #task_id = "654fe914-060a-4e77-883d-2cba864aca88"
@@ -61,98 +55,16 @@ async def translate_audio(file: UploadFile = File(...)):
                         if sentence:  # Add space before word unless it's the first word
                             sentence += " "
                         sentence += word["text"]
-                print("Final sentence:", sentence)
-                inputs = tokenizer(sentence, return_tensors="pt")
-                tokens = model.generate(**inputs, forced_bos_token_id=forced_bos_token_id)
-                result = tokenizer.decode(tokens[0], skip_special_tokens=True)
-                print("translation done")
-                print(result)
-                tts = gTTS(text=result, lang='gu')
-                tts.save("output_gujarati_name.mp3")
-                print("done")
 
-
-    #response_str = download_transcript("8e07d665-9e1c-4e96-bb5e-2752bf69b406", "0d6eedb9-0ed7-4937-bf12-b43f27ec214e") #english
-    #response_str = download_transcript("8e07d665-9e1c-4e96-bb5e-2752bf69b406", "972bf28a-a962-4eaa-9200-ecf262c83a86") # gujarati
-
-#     transcript_data = json.loads(response_str)
-#
-#     # Build the sentence
-#     sentence = ""
-#     for word in transcript_data:
-#         if word["type"] == "punctuation":
-#             sentence += word["text"]
-#         else:
-#             if sentence:  # Add space before word unless it's the first word
-#                 sentence += " "
-#             sentence += word["text"]
-#
-#     print("Final sentence:", sentence)
-#
-#     inputs = tokenizer(sentence, return_tensors="pt")
-#     tokens = model.generate(**inputs, forced_bos_token_id=forced_bos_token_id)
-#     result = tokenizer.decode(tokens[0], skip_special_tokens=True)
-#     print("translation done")
-#     print(result)
-#     tts = gTTS(text=result, lang='gu')
-#     tts.save("output_gujarati.mp3")
-#     print("done")
-#     if video_id:
-#         task_id = start_transcription(video_id)
-#         if task_id:
-#             success = wait_for_task_completion(video_id, task_id, API_KEY)
-#             if success:
-#                 download_transcript(video_id, task_id)
-
-
-
-#     with open(audio_path, "wb") as buffer:
-#         shutil.copyfileobj(file.file, buffer)
-    
-#     # Dummy translated file (you'd replace with real translation logic)
-#     translated_audio = "translated_output.wav"
-#     shutil.copy(audio_path, translated_audio)
-#
-#     # Clean up uploaded file
-#     os.remove(audio_path)
-
-    # Replace with your ZapCap API key
-
-    # Path to your Gujarati audio file
-#     audio_path = f"temp_{file.filename}"
-#
-#     print(audio_path)
-
-    # Define API endpoint
-#     url = "https://api.zapcap.ai/v1/asr/transcribe"
-#
-#     # Open the audio file in binary mode
-#     with open(audio_path, "rb") as f:
-#         files = {
-#             "file": (audio_path, f, "audio/wav")
-#         }
-#
-#         headers = {
-#             "Authorization": f"Bearer {API_KEY}"
-#         }
-#
-#         data = {
-#             "language": "gu-IN"  # Gujarati (India)
-#         }
-#
-#         print("sending data")
-#         # Make the request
-#         response = requests.post(url, headers=headers, files=files, data=data)
-#         print(response)
-#
-#         # Check the result
-#         if response.status_code == 200:
-#             result = response.json()
-#             print("✅ Transcription:")
-#             print(result["text"])
-#         else:
-#             print("❌ Error:", response.status_code)
-#             print(response.text)
+    print("Final sentence:", sentence)
+    inputs = tokenizer(sentence, return_tensors="pt")
+    tokens = model.generate(**inputs, forced_bos_token_id=forced_bos_token_id)
+    result = tokenizer.decode(tokens[0], skip_special_tokens=True)
+    print("translation done")
+    print(result)
+    tts = gTTS(text=result, lang='gu')
+    tts.save("output_gujarati_name.mp3")
+    print("done")
     return "ok"
 
 @app.get("/translate-audio")
@@ -165,7 +77,7 @@ LANGUAGE_CODE = "en"  # Gujarati
 
 # Step 1: Upload video to ZapCap
 def upload_video(file_path):
-    print("📤 Uploading video...")
+    print("Uploading video...")
     print(file_path)
     with open(file_path, "rb") as file:
         response = requests.post(
@@ -183,7 +95,7 @@ def upload_video(file_path):
 
 # Step 2: Create transcription task
 def start_transcription(video_id):
-    print("📝 Creating transcription task...")
+    print("Creating transcription task...")
     data = {
         "autoApprove": True,
         "language": LANGUAGE_CODE,
@@ -208,7 +120,7 @@ def check_task_status(video_id, task_id):
         f"https://api.zapcap.ai/videos/{video_id}/task/{task_id}",
         headers={"x-api-key": API_KEY},
     )
-    print("📊 Task status:", response.json())
+    print("Task status:", response.json())
 
 def convert_wav_to_mp4(audio_path, output_path="output_video.mp4", image_path=None):
     if not os.path.exists(audio_path):
@@ -250,7 +162,7 @@ def convert_wav_to_mp4(audio_path, output_path="output_video.mp4", image_path=No
     print("🚀 Running FFmpeg...")
     try:
         subprocess.run(command, check=True)
-        print(f"✅ Successfully created video: {output_path}")
+        print(f"Successfully created video: {output_path}")
     except subprocess.CalledProcessError as e:
         print("Error:", e)
 
@@ -272,6 +184,7 @@ def download_transcript(video_id, task_id, output_file="transcript.txt"):
 
  #   response = session.get(url)
 
+# Temporarily doing it from curl
     url = f"https://api.zapcap.ai/videos/{video_id}/task/{task_id}/transcript"
     print(url)
     command = [
@@ -314,7 +227,7 @@ def wait_for_task_completion(video_id, task_id, api_key, check_interval=5, timeo
         if response.status_code == 200:
             data = response.json()
             status = data.get("status")
-            print(f"🔁 Task Status: {status}")
+            print(f"ask Status: {status}")
 
             if status == "completed":
                 print("Task completed successfully!")
